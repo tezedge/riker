@@ -13,6 +13,10 @@ keywords = ["actors", "actor-model", "async", "cqrs", "event_sourcing"]
 [badges]
 travis-ci = { repository = "riker-rs/riker" }
 
+[[bench]]
+name = "basic"
+harness = false
+
 [dependencies]
 riker-macros = { path = "riker-macros", version = "0.2.0" }
 toml = { version = "0.5.8" }
@@ -26,5 +30,7 @@ num_cpus = "1.13.0"
 
 
 [dev-dependencies]
+criterion = { version = "0.3.5" }
+rand = "0.7"
 riker-testkit = "0.1.0"
 log = "0.4"
