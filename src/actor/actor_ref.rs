@@ -55,9 +55,9 @@ pub trait ActorReference {
     fn sys_tell(&self, msg: SystemMsg);
 }
 
-pub type BoxedTell<T> = Box<dyn Tell<T> + Send + 'static>;
+pub type BoxedTell<T> = Box<dyn Tell<T> + 'static>;
 
-pub trait Tell<T>: ActorReference + Send + 'static {
+pub trait Tell<T>: ActorReference + 'static {
     fn tell(&self, msg: T, sender: Sender);
     fn box_clone(&self) -> BoxedTell<T>;
 }
@@ -195,7 +195,7 @@ impl BasicActorRef {
         sender: impl Into<Option<BasicActorRef>>,
     ) -> Result<(), AnyEnqueueError>
     where
-        Msg: Message + Send,
+        Msg: Message,
     {
         self.try_tell_any(&mut AnyMessage::new(msg, true), sender)
     }

@@ -1,4 +1,4 @@
-use futures::executor::block_on;
+use futures::{executor::block_on, task::LocalSpawnExt};
 use riker::actors::*;
 
 #[test]
@@ -43,18 +43,22 @@ impl Actor for ShutdownTest {
 #[test]
 #[allow(dead_code)]
 fn system_shutdown() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, mut pool) = ActorSystem::new().unwrap();
 
     let _ = sys
         .actor_of_args::<ShutdownTest, _>("test-actor-1", 1)
         .unwrap();
 
-    block_on(sys.shutdown()).unwrap();
+    pool.spawner().spawn_local(async move {
+        let _ = sys.shutdown().await;
+    }).unwrap();
+
+    pool.run();
 }
 
 #[test]
 fn system_futures_exec() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     for i in 0..100 {
         let f = sys.run(async move { format!("some_val_{}", i) }).unwrap();
@@ -65,7 +69,7 @@ fn system_futures_exec() {
 
 #[test]
 fn system_futures_panic() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     for _ in 0..100 {
         let _ = sys
@@ -84,9 +88,9 @@ fn system_futures_panic() {
 
 #[test]
 fn system_builder() {
-    let sys = SystemBuilder::new().create().unwrap();
+    let (sys, pool) = SystemBuilder::new().create().unwrap();
     block_on(sys.shutdown()).unwrap();
 
-    let sys = SystemBuilder::new().name("my-sys").create().unwrap();
+    let (sys, pool) = SystemBuilder::new().name("my-sys").create().unwrap();
     block_on(sys.shutdown()).unwrap();
 }

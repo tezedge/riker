@@ -134,6 +134,7 @@ impl ActorCell {
         let mb = &self.inner.sys_mailbox;
 
         let k = self.kernel();
+        slog::info!(self.inner.system.log(), "sent sys msg: {:?}, receiver: {}", msg.msg, self.uri());
         dispatch(msg, mb, k, &self.inner.system)
     }
 
@@ -359,6 +360,7 @@ where
         let mb = &self.mailbox;
         let k = self.cell.kernel();
 
+        slog::info!(self.system().log(), "sent msg: {:?}, receiver: {}", msg.msg, self.uri());
         dispatch(msg, mb, k, &self.system()).map_err(|e| {
             let dl = e.clone(); // clone the failed message and send to dead letters
             let dl = DeadLetter {

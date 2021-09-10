@@ -136,7 +136,7 @@ use std::{
 
 use futures::{
     channel::oneshot,
-    executor::{ThreadPool, ThreadPoolBuilder},
+    executor::{LocalPool, LocalSpawner},
     future::RemoteHandle,
     task::{SpawnError, SpawnExt},
     Future,
@@ -173,7 +173,6 @@ pub struct SystemBuilder {
     name: Option<String>,
     cfg: Option<Config>,
     log: Option<Logger>,
-    exec: Option<ThreadPool>,
 }
 
 impl SystemBuilder {
@@ -181,15 +180,17 @@ impl SystemBuilder {
         SystemBuilder::default()
     }
 
-    pub fn create(self) -> Result<ActorSystem, SystemError> {
+    pub fn create(self) -> Result<(ActorSystem, LocalPool), SystemError> {
         let name = self.name.unwrap_or_else(|| "riker".to_string());
         let cfg = self.cfg.unwrap_or_else(load_config);
-        let exec = self.exec.unwrap_or_else(|| default_exec(&cfg));
+        let pool = LocalPool::new();
+        let exec = pool.spawner();
         let log = self
             .log
             .unwrap_or_else(|| default_log(&cfg));
 
         ActorSystem::create(name.as_ref(), exec, log, cfg)
+            .map(|s| (s, pool))
     }
 
     pub fn name(self, name: &str) -> Self {
@@ -202,13 +203,6 @@ impl SystemBuilder {
     pub fn cfg(self, cfg: Config) -> Self {
         SystemBuilder {
             cfg: Some(cfg),
-            ..self
-        }
-    }
-
-    pub fn exec(self, exec: ThreadPool) -> Self {
-        SystemBuilder {
-            exec: Some(exec),
             ..self
         }
     }
@@ -235,7 +229,7 @@ pub struct ActorSystem {
     sys_actors: Option<SysActors>,
     log: Logger,
     debug: bool,
-    pub exec: ThreadPool,
+    pub exec: LocalSpawner,
     pub timer: Arc<Mutex<TimerRef>>,
     pub sys_channels: Option<SysChannels>,
     pub(crate) provider: Provider,
@@ -245,36 +239,42 @@ impl ActorSystem {
     /// Create a new `ActorSystem` instance
     ///
     /// Requires a type that implements the `Model` trait.
-    pub fn new() -> Result<ActorSystem, SystemError> {
+    pub fn new() -> Result<(ActorSystem, LocalPool), SystemError> {
         let cfg = load_config();
-        let exec = default_exec(&cfg);
+        let pool = LocalPool::new();
+        let exec = pool.spawner();
         let log = default_log(&cfg);
 
         ActorSystem::create("riker", exec, log, cfg)
+            .map(|s| (s, pool))
     }
 
     /// Create a new `ActorSystem` instance with provided name
     ///
     /// Requires a type that implements the `Model` trait.
-    pub fn with_name(name: &str) -> Result<ActorSystem, SystemError> {
+    pub fn with_name(name: &str) -> Result<(ActorSystem, LocalPool), SystemError> {
         let cfg = load_config();
-        let exec = default_exec(&cfg);
+        let pool = LocalPool::new();
+        let exec = pool.spawner();
         let log = default_log(&cfg);
 
         ActorSystem::create(name, exec, log, cfg)
+            .map(|s| (s, pool))
     }
 
     /// Create a new `ActorSystem` instance bypassing default config behavior
-    pub fn with_config(name: &str, cfg: Config) -> Result<ActorSystem, SystemError> {
-        let exec = default_exec(&cfg);
+    pub fn with_config(name: &str, cfg: Config) -> Result<(ActorSystem, LocalPool), SystemError> {
+        let pool = LocalPool::new();
+        let exec = pool.spawner();
         let log = default_log(&cfg);
 
         ActorSystem::create(name, exec, log, cfg)
+            .map(|s| (s, pool))
     }
 
     fn create(
         name: &str,
-        exec: ThreadPool,
+        exec: LocalSpawner,
         log: Logger,
         cfg: Config,
     ) -> Result<ActorSystem, SystemError> {
@@ -808,16 +808,6 @@ impl ThreadPoolConfig {
         self.stack_size = stack_size;
         None
     }
-}
-
-fn default_exec(cfg: &Config) -> ThreadPool {
-    let exec_cfg = cfg.dispatcher.clone();
-    ThreadPoolBuilder::new()
-        .pool_size(exec_cfg.pool_size)
-        .stack_size(exec_cfg.stack_size)
-        .name_prefix("pool-thread-#")
-        .create()
-        .unwrap()
 }
 
 #[derive(Clone)]

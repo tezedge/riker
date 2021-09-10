@@ -130,7 +130,7 @@ impl fmt::Debug for RestartError {
     }
 }
 
-pub trait Actor: Send + 'static {
+pub trait Actor: 'static {
     type Msg: Message;
 
     /// Invoked when an actor is being started by the system.

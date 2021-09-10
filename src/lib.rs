@@ -28,12 +28,12 @@ pub struct Envelope<T: Message> {
     pub msg: T,
 }
 
-pub trait Message: Debug + Clone + Send + 'static {}
-impl<T: Debug + Clone + Send + 'static> Message for T {}
+pub trait Message: Debug + Clone + 'static {}
+impl<T: Debug + Clone + 'static> Message for T {}
 
 pub struct AnyMessage {
     pub one_time: bool,
-    pub msg: Option<Box<dyn Any + Send>>,
+    pub msg: Option<Box<dyn Any>>,
 }
 
 pub struct DowncastAnyMessageError;

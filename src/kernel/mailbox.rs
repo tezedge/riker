@@ -31,7 +31,7 @@ impl From<()> for AnyEnqueueError {
     }
 }
 
-pub trait AnySender: Send + Sync {
+pub trait AnySender {
     fn try_any_enqueue(&self, msg: &mut AnyMessage, sender: Sender) -> Result<(), AnyEnqueueError>;
 
     fn set_sched(&self, b: bool);
@@ -381,7 +381,7 @@ pub struct MailboxConfig {
 impl Default for MailboxConfig {
     fn default() -> Self {
         MailboxConfig {
-            msg_process_limit: 1000,
+            msg_process_limit: 1,
         }
     }
 }

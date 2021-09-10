@@ -68,7 +68,7 @@ impl Receive<SomeMessage> for Subscriber {
 
 #[test]
 fn channel_publish() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     // Create the channel we'll be using
     let chan: ChannelRef<SomeMessage> = channel("my-chan", &sys).unwrap();
@@ -100,7 +100,7 @@ fn channel_publish() {
 
 #[test]
 fn channel_publish_subscribe_all() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     // Create the channel we'll be using
     let chan: ChannelRef<SomeMessage> = channel("my-chan", &sys).unwrap();

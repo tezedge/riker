@@ -47,8 +47,8 @@ impl Props {
     #[inline]
     pub fn new_from<A, F>(creator: F) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
-        A: Actor + Send + 'static,
-        F: Fn() -> A + Send + 'static,
+        A: Actor + 'static,
+        F: Fn() -> A + 'static,
     {
         Arc::new(Mutex::new(ActorProps::new(creator)))
     }
@@ -120,9 +120,9 @@ impl Props {
         args: Args,
     ) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
-        A: Actor + Send + 'static,
+        A: Actor + 'static,
         Args: ActorArgs,
-        F: Fn(Args) -> A + Send + 'static,
+        F: Fn(Args) -> A + 'static,
     {
         Arc::new(Mutex::new(ActorPropsWithArgs::new(creator, args)))
     }
@@ -282,7 +282,7 @@ impl<A: Default + Actor> ActorFactory for A {
 ///
 /// `ActorProducer` can hold values required by the actor's factory method
 /// parameters.
-pub trait ActorProducer: fmt::Debug + Send + UnwindSafe + RefUnwindSafe {
+pub trait ActorProducer: fmt::Debug + UnwindSafe + RefUnwindSafe {
     type Actor: Actor;
 
     /// Produces an instance of an `Actor`.
@@ -301,7 +301,7 @@ pub trait ActorProducer: fmt::Debug + Send + UnwindSafe + RefUnwindSafe {
 
 impl<A> ActorProducer for Arc<Mutex<Box<dyn ActorProducer<Actor = A>>>>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
 {
     type Actor = A;
 
@@ -312,7 +312,7 @@ where
 
 impl<A> ActorProducer for Arc<Mutex<dyn ActorProducer<Actor = A>>>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
 {
     type Actor = A;
 
@@ -323,7 +323,7 @@ where
 
 impl<A> ActorProducer for Box<dyn ActorProducer<Actor = A>>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
 {
     type Actor = A;
 
@@ -333,7 +333,7 @@ where
 }
 
 pub struct ActorProps<A: Actor> {
-    creator: Box<dyn Fn() -> A + Send>,
+    creator: Box<dyn Fn() -> A>,
 }
 
 impl<A: Actor> UnwindSafe for ActorProps<A> {}
@@ -341,11 +341,11 @@ impl<A: Actor> RefUnwindSafe for ActorProps<A> {}
 
 impl<A> ActorProps<A>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
 {
     pub fn new<F>(creator: F) -> impl ActorProducer<Actor = A>
     where
-        F: Fn() -> A + Send + 'static,
+        F: Fn() -> A + 'static,
     {
         ActorProps {
             creator: Box::new(creator),
@@ -355,7 +355,7 @@ where
 
 impl<A> ActorProducer for ActorProps<A>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
 {
     type Actor = A;
 
@@ -378,7 +378,7 @@ impl<A: Actor> fmt::Debug for ActorProps<A> {
 }
 
 pub struct ActorPropsWithArgs<A: Actor, Args: ActorArgs> {
-    creator: Box<dyn Fn(Args) -> A + Send>,
+    creator: Box<dyn Fn(Args) -> A>,
     args: Args,
 }
 
@@ -387,12 +387,12 @@ impl<A: Actor, Args: ActorArgs> RefUnwindSafe for ActorPropsWithArgs<A, Args> {}
 
 impl<A, Args> ActorPropsWithArgs<A, Args>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
     Args: ActorArgs,
 {
     pub fn new<F>(creator: F, args: Args) -> impl ActorProducer<Actor = A>
     where
-        F: Fn(Args) -> A + Send + 'static,
+        F: Fn(Args) -> A + 'static,
     {
         ActorPropsWithArgs {
             creator: Box::new(creator),
@@ -403,7 +403,7 @@ where
 
 impl<A, Args> ActorProducer for ActorPropsWithArgs<A, Args>
 where
-    A: Actor + Send + 'static,
+    A: Actor + 'static,
     Args: ActorArgs,
 {
     type Actor = A;
@@ -427,5 +427,5 @@ impl<A: Actor, Args: ActorArgs> fmt::Debug for ActorPropsWithArgs<A, Args> {
     }
 }
 
-pub trait ActorArgs: Clone + Send + Sync + 'static {}
-impl<T: Clone + Send + Sync + 'static> ActorArgs for T {}
+pub trait ActorArgs: Clone + 'static {}
+impl<T: Clone + 'static> ActorArgs for T {}

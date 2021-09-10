@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use futures::{channel::mpsc::Sender, task::SpawnExt, SinkExt};
+use futures::{channel::mpsc::Sender, task::LocalSpawnExt, SinkExt};
 
 use crate::{
     actor::{MsgError, MsgResult},
@@ -36,8 +36,9 @@ impl KernelRef {
 
     fn send(&self, msg: KernelMsg, sys: &ActorSystem) {
         let mut tx = self.tx.clone();
+        slog::info!(sys.log(), "spawn send {:?}", msg);
         sys.exec
-            .spawn(async move {
+            .spawn_local(async move {
                 drop(tx.send(msg).await);
             })
             .unwrap();

@@ -96,7 +96,7 @@ impl BasicTimer {
         };
 
         let (tx, rx) = mpsc::channel();
-        thread::spawn(move || loop {
+        /*thread::spawn(move || loop {
             process.execute_once_jobs();
             process.execute_repeat_jobs();
 
@@ -109,7 +109,7 @@ impl BasicTimer {
             }
 
             thread::sleep(Duration::from_millis(cfg.frequency_millis));
-        });
+        });*/
 
         tx
     }

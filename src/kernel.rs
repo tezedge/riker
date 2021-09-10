@@ -18,7 +18,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use futures::{channel::mpsc::channel, task::SpawnExt, StreamExt};
+use futures::{channel::mpsc::channel, task::LocalSpawnExt, StreamExt};
 use slog::warn;
 
 use crate::{
@@ -70,8 +70,11 @@ where
 
     let actor_ref = ActorRef::new(cell);
 
+    slog::info!(sys.log(), "spawn receiver: {}", actor_ref.uri());
+    let logger = sys.log();
     let f = async move {
         while let Some(msg) = rx.next().await {
+            slog::info!(logger, "received at: {}, msg: {:?}", actor_ref.uri(), msg);
             match msg {
                 KernelMsg::RunActor => {
                     let ctx = Context {
@@ -98,7 +101,7 @@ where
         }
     };
 
-    sys.exec.spawn(f).unwrap();
+    sys.exec.spawn_local(f).unwrap();
     Ok(kr)
 }
 

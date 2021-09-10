@@ -16,7 +16,7 @@ travis-ci = { repository = "riker-rs/riker" }
 [dependencies]
 riker-macros = { path = "riker-macros", version = "0.2.0" }
 toml = { version = "0.5.8" }
-futures = { version = "0.3.4", default-features = false, features = ["std", "thread-pool"] }
+futures = { version = "0.3.4", default-features = false, features = ["std", "executor"] }
 uuid = { version = "0.8.1", features = ["v4"] }
 slog = "2.7"
 num_cpus = "1.13.0"
