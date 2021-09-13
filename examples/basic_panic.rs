@@ -46,7 +46,7 @@ impl Receive<Panic> for PanicActor {
 }
 
 fn main() {
-    let sys = SystemBuilder::new().name("my-app").create().unwrap();
+    let (sys, pool) = SystemBuilder::new().name("my-app").create().unwrap();
 
     let sup = sys.actor_of::<PanicActor>("panic_actor").unwrap();
     // println!("Child not added yet");
@@ -60,4 +60,6 @@ fn main() {
     std::thread::sleep(Duration::from_millis(500));
     println!("We should see panic printed, but we still alive and panic actor gone!");
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

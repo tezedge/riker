@@ -1,8 +1,6 @@
 extern crate riker;
 use riker::actors::*;
 
-use std::time::Duration;
-
 #[derive(Default)]
 struct Child;
 
@@ -35,7 +33,7 @@ impl Actor for MyActor {
 
 // start the system and create an actor
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let my_actor = sys.actor_of::<MyActor>("my-actor").unwrap();
 
@@ -45,6 +43,7 @@ fn main() {
     sys.print_tree();
 
     println!("Child added already");
-    std::thread::sleep(Duration::from_millis(500));
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

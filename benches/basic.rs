@@ -95,7 +95,7 @@ fn single_actor(c: &mut Criterion) {
         rand::thread_rng().fill(data.as_mut_slice());
         data    
     }).collect::<Vec<_>>();
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
     let done = Arc::new(AtomicUsize::new(0));
     let main_actor = sys.actor_of_args::<MainActor, _>("main-actor", done.clone()).unwrap();
 
@@ -110,6 +110,8 @@ fn single_actor(c: &mut Criterion) {
             done.store(0, Ordering::SeqCst);
         })
     });
+
+    sys.shutdown(pool);
 }
 
 fn multiple_actors(c: &mut Criterion) {
@@ -120,7 +122,7 @@ fn multiple_actors(c: &mut Criterion) {
         rand::thread_rng().fill(data.as_mut_slice());
         data    
     }).collect::<Vec<_>>();
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
     let done = Arc::new(AtomicUsize::new(0));
     let main_actor = sys.actor_of_args::<MainActor, _>("main-actor", done.clone()).unwrap();
 
@@ -135,6 +137,8 @@ fn multiple_actors(c: &mut Criterion) {
             done.store(0, Ordering::SeqCst);
         })
     });
+
+    sys.shutdown(pool);
 }
 
 criterion_group!(basic, single_actor, multiple_actors);

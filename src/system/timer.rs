@@ -96,6 +96,9 @@ impl BasicTimer {
         };
 
         let (tx, rx) = mpsc::channel();
+
+        // TODO:
+        let _ = (cfg, &mut process, rx);
         /*thread::spawn(move || loop {
             process.execute_once_jobs();
             process.execute_repeat_jobs();

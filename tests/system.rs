@@ -1,4 +1,3 @@
-use futures::{executor::block_on, task::LocalSpawnExt};
 use riker::actors::*;
 
 #[test]
@@ -43,33 +42,31 @@ impl Actor for ShutdownTest {
 #[test]
 #[allow(dead_code)]
 fn system_shutdown() {
-    let (sys, mut pool) = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let _ = sys
         .actor_of_args::<ShutdownTest, _>("test-actor-1", 1)
         .unwrap();
 
-    pool.spawner().spawn_local(async move {
-        let _ = sys.shutdown().await;
-    }).unwrap();
-
-    pool.run();
+    sys.shutdown(pool);
 }
 
 #[test]
 fn system_futures_exec() {
-    let (sys, pool) = ActorSystem::new().unwrap();
+    let (sys, mut pool) = ActorSystem::new().unwrap();
 
     for i in 0..100 {
         let f = sys.run(async move { format!("some_val_{}", i) }).unwrap();
 
-        assert_eq!(block_on(f), format!("some_val_{}", i));
+        assert_eq!(pool.run_until(f), format!("some_val_{}", i));
     }
+
+    sys.shutdown(pool);
 }
 
 #[test]
 fn system_futures_panic() {
-    let (sys, pool) = ActorSystem::new().unwrap();
+    let (sys, mut pool) = ActorSystem::new().unwrap();
 
     for _ in 0..100 {
         let _ = sys
@@ -82,15 +79,17 @@ fn system_futures_panic() {
     for i in 0..100 {
         let f = sys.run(async move { format!("some_val_{}", i) }).unwrap();
 
-        assert_eq!(block_on(f), format!("some_val_{}", i));
+        assert_eq!(pool.run_until(f), format!("some_val_{}", i));
     }
+
+    sys.shutdown(pool);
 }
 
 #[test]
 fn system_builder() {
     let (sys, pool) = SystemBuilder::new().create().unwrap();
-    block_on(sys.shutdown()).unwrap();
+    sys.shutdown(pool);
 
     let (sys, pool) = SystemBuilder::new().name("my-sys").create().unwrap();
-    block_on(sys.shutdown()).unwrap();
+    sys.shutdown(pool);
 }

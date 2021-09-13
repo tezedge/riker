@@ -231,7 +231,7 @@ pub struct ActorSystem {
     debug: bool,
     pub exec: LocalSpawner,
     pub timer: Arc<Mutex<TimerRef>>,
-    pub sys_channels: Option<SysChannels>,
+    sys_channels: Option<SysChannels>,
     pub(crate) provider: Provider,
 }
 
@@ -389,12 +389,11 @@ impl ActorSystem {
             }
         }
 
-        let root = &self.sys_actors.as_ref().unwrap().root;
-        print_node(self, &root, "");
+        let root = self.root();
+        print_node(self, root, "");
     }
 
     /// Returns the system root's actor reference
-    #[allow(dead_code)]
     fn root(&self) -> &BasicActorRef {
         &self.sys_actors.as_ref().unwrap().root
     }
@@ -482,15 +481,10 @@ impl ActorSystem {
     /// Attempts a graceful shutdown of the system and all actors.
     /// Actors will receive a stop message, executing `actor.post_stop`.
     ///
-    /// Does not block. Returns a future which is completed when all
-    /// actors have successfully stopped.
-    pub fn shutdown(&self) -> Shutdown {
-        let (tx, rx) = oneshot::channel::<()>();
-        let tx = Arc::new(Mutex::new(Some(tx)));
-
-        self.tmp_actor_of_args::<ShutdownActor, _>(tx).unwrap();
-
-        rx
+    /// Block.
+    pub fn shutdown(self, mut pool: LocalPool) {
+        self.stop(self.user_root());
+        pool.run_until_stalled();
     }
 }
 

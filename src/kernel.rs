@@ -70,11 +70,11 @@ where
 
     let actor_ref = ActorRef::new(cell);
 
-    slog::info!(sys.log(), "spawn receiver: {}", actor_ref.uri());
+    slog::debug!(sys.log(), "spawn receiver: {}", actor_ref.uri());
     let logger = sys.log();
     let f = async move {
         while let Some(msg) = rx.next().await {
-            slog::info!(logger, "received at: {}, msg: {:?}", actor_ref.uri(), msg);
+            slog::debug!(logger, "received at: {}, msg: {:?}", actor_ref.uri(), msg);
             match msg {
                 KernelMsg::RunActor => {
                     let ctx = Context {

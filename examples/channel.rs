@@ -78,7 +78,7 @@ impl Receive<PowerStatus> for NavigationActor {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
     let chan: ChannelRef<PowerStatus> = channel("power-status", &sys).unwrap();
 
     sys.actor_of_args::<GpsActor, _>("gps-actor", chan.clone())
@@ -103,4 +103,6 @@ fn main() {
     // sleep another half seconds to process messages
     std::thread::sleep(Duration::from_millis(500));
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

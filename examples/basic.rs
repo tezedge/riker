@@ -1,5 +1,4 @@
 extern crate riker;
-use futures::task::LocalSpawnExt;
 use riker::actors::*;
 
 #[derive(Default)]
@@ -16,15 +15,11 @@ impl Actor for MyActor {
 
 // start the system and create an actor
 fn main() {
-    let (sys, mut pool) = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let my_actor = sys.actor_of::<MyActor>("my-actor").unwrap();
 
     my_actor.tell("Hello my actor!".to_string(), None);
 
-    pool.spawner().spawn_local(async move {
-        let _ = sys.shutdown().await;
-    }).unwrap();
-
-    pool.run();
+    sys.shutdown(pool);
 }

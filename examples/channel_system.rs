@@ -84,7 +84,7 @@ impl Receive<SystemEvent> for SystemActor {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let _sub = sys.actor_of::<SystemActor>("system-actor").unwrap();
 
@@ -105,4 +105,6 @@ fn main() {
     sys.stop(&dumb);
     std::thread::sleep(Duration::from_millis(500));
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

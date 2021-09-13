@@ -77,7 +77,7 @@ impl Receive<Panic> for RestartSup {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let sup = sys.actor_of::<RestartSup>("supervisor").unwrap();
     // println!("Child not added yet");
@@ -91,4 +91,6 @@ fn main() {
     std::thread::sleep(Duration::from_millis(500));
     println!("We should see panic printed, but we still alive and panic actor gone!");
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

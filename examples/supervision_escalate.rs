@@ -116,7 +116,7 @@ impl Receive<Panic> for EscRestartSup {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let sup = sys.actor_of::<EscRestartSup>("supervisor").unwrap();
 
@@ -128,4 +128,6 @@ fn main() {
     std::thread::sleep(Duration::from_millis(500));
     println!("We should see panic printed, but we still alive and panic actor still here!");
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

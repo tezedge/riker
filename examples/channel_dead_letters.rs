@@ -63,7 +63,7 @@ impl Receive<DeadLetter> for DeadLetterActor {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let _sub = sys.actor_of::<DeadLetterActor>("system-actor").unwrap();
 
@@ -74,10 +74,10 @@ fn main() {
 
     println!("Stopping dump actor");
     sys.stop(&dumb);
-    std::thread::sleep(Duration::from_millis(500));
 
     println!("Sending SomeMessage to stopped actor");
     dumb.tell(SomeMessage, None);
-    std::thread::sleep(Duration::from_millis(500));
     sys.print_tree();
+
+    sys.shutdown(pool);
 }

@@ -2,8 +2,6 @@ extern crate riker;
 use riker::actors::*;
 use riker::system::ActorSystem;
 
-use std::time::Duration;
-
 // a simple minimal actor for use in tests
 // #[actor(TestProbe)]
 #[derive(Default, Debug)]
@@ -66,13 +64,13 @@ impl Actor for SelectTest {
 }
 
 fn main() {
-    let sys = ActorSystem::new().unwrap();
+    let (sys, pool) = ActorSystem::new().unwrap();
 
     let actor = sys.actor_of::<SelectTest>("select-actor").unwrap();
 
     actor.tell("msg for select-actor", None);
 
-    std::thread::sleep(Duration::from_millis(500));
-
     sys.print_tree();
+
+    sys.shutdown(pool);
 }
