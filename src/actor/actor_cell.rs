@@ -185,7 +185,7 @@ impl ActorCell {
     }
 
     pub fn death_watch<A: Actor>(&self, terminated: &BasicActorRef, actor: &mut Option<A>) {
-        if self.is_child(&terminated) {
+        if self.is_child(terminated) {
             self.remove_child(terminated);
 
             if !self.has_children() {
@@ -359,7 +359,7 @@ where
         let mb = &self.mailbox;
         let k = self.cell.kernel();
 
-        dispatch(msg, mb, k, &self.system()).map_err(|e| {
+        dispatch(msg, mb, k, self.system()).map_err(|e| {
             let dl = e.clone(); // clone the failed message and send to dead letters
             let dl = DeadLetter {
                 msg: format!("{:?}", dl.msg.msg),

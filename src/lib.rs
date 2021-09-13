@@ -1,5 +1,5 @@
 #![crate_name = "riker"]
-#![deny(clippy::all)]
+// #![deny(clippy::all)]
 // #![deny(clippy::pedantic)]
 // #![deny(clippy::nursery)]
 #![allow(clippy::new_ret_no_self)]
