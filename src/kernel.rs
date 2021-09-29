@@ -135,6 +135,7 @@ where
 
     let parent = actor_ref.parent();
     if !parent.is_root() {
+        slog::warn!(sys.log(), "tell actor terminated: {}", actor_ref.uri());
         parent.sys_tell(ActorTerminated { actor: actor_ref }.into());
     }
 }
