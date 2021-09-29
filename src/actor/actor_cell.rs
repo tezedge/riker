@@ -148,7 +148,8 @@ impl ActorCell {
         self.inner.children.add(actor);
     }
 
-    pub fn remove_child(&self, actor: &BasicActorRef) {
+    /// return true if there is no children left
+    pub fn remove_child_is_empty(&self, actor: &BasicActorRef) -> bool {
         self.inner.children.remove(actor)
     }
 
@@ -184,21 +185,17 @@ impl ActorCell {
     }
 
     pub fn death_watch<A: Actor>(&self, terminated: &BasicActorRef, actor: &mut Option<A>) {
-        if self.is_child(&terminated) {
-            self.remove_child(terminated);
+        if self.remove_child_is_empty(terminated) {
+            // No children exist. Stop this actor's kernel.
+            if self.inner.is_terminating.load(Ordering::Relaxed) {
+                self.kernel().terminate();
+                post_stop(actor);
+            }
 
-            if !self.has_children() {
-                // No children exist. Stop this actor's kernel.
-                if self.inner.is_terminating.load(Ordering::Relaxed) {
-                    self.kernel().terminate();
-                    post_stop(actor);
-                }
-
-                // No children exist. Restart the actor.
-                if self.inner.is_restarting.load(Ordering::Relaxed) {
-                    self.inner.is_restarting.store(false, Ordering::Relaxed);
-                    self.kernel().restart();
-                }
+            // No children exist. Restart the actor.
+            if self.inner.is_restarting.load(Ordering::Relaxed) {
+                self.inner.is_restarting.store(false, Ordering::Relaxed);
+                self.kernel().restart();
             }
         }
     }
@@ -599,8 +596,10 @@ impl Children {
         self.actors.write().unwrap().insert(actor.name().to_string(), actor);
     }
 
-    pub fn remove(&self, actor: &BasicActorRef) {
-        self.actors.write().unwrap().remove(actor.name());
+    pub fn remove(&self, actor: &BasicActorRef) -> bool {
+        let mut g = self.actors.write().unwrap();
+        g.remove(actor.name());
+        g.is_empty()
     }
 
     pub fn len(&self) -> usize {
