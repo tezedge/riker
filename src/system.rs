@@ -251,6 +251,7 @@ pub struct ActorSystem {
     pub sys_channels: Option<SysChannels>,
     temp_storage: Arc<Mutex<Option<(SysActors, SysChannels)>>>,
     pub(crate) provider: Provider,
+    shutdown_rx: Arc<Mutex<Option<<ActorSystemBackendTokio as ActorSystemBackend>::Rx>>>,
 }
 
 impl ActorSystem {
@@ -312,6 +313,8 @@ impl ActorSystem {
             started_at_moment: Instant::now(),
         };
 
+        let (shutdown_tx, shutdown_rx) = backend.channel(1);
+
         // 2. create uninitialized system
         let mut sys = ActorSystem {
             proto: Arc::new(proto),
@@ -324,10 +327,11 @@ impl ActorSystem {
             sys_actors: None,
             temp_storage: Arc::new(Mutex::new(None)),
             provider: prov.clone(),
+            shutdown_rx: Arc::new(Mutex::new(Some(shutdown_rx))),
         };
 
         // 3. create initial actor hierarchy
-        let sys_actors = create_root(&sys);
+        let sys_actors = create_root(&sys, Arc::new(shutdown_tx));
         sys.sys_actors = Some(sys_actors.clone());
 
         // 4. start system channels
@@ -503,9 +507,8 @@ impl ActorSystem {
     /// Does not block. Returns a future which is completed when all
     /// actors have successfully stopped.
     pub fn shutdown(&self) -> Pin<Box<dyn Future<Output = ()>>> {
-        let (tx, rx) = self.backend.channel(1);
-        self.tmp_actor_of_args::<ShutdownActor, _>(Arc::new(tx)).unwrap();
-        self.backend.receiver_future(rx)
+        self.stop(self.user_root());
+        self.backend.receiver_future(self.shutdown_rx.lock().unwrap().take().expect("shutdown was already called"))
     }
 }
 

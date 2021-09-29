@@ -169,8 +169,16 @@ impl ActorCell {
 
         if !self.has_children() {
             self.kernel().terminate();
+            slog::warn!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
             post_stop(actor);
         } else {
+            slog::warn!(
+                self.inner.system.log(),
+                "cannot run post stop: {}, uri: {}, still has children",
+                std::any::type_name::<A>(),
+                self.inner.uri,
+            );
+
             self.inner.children.for_each(|child| self.stop(child));
         }
     }
@@ -189,6 +197,7 @@ impl ActorCell {
             // No children exist. Stop this actor's kernel.
             if self.inner.is_terminating.load(Ordering::Relaxed) {
                 self.kernel().terminate();
+                slog::warn!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
                 post_stop(actor);
             }
 
