@@ -1,5 +1,3 @@
-use futures::executor::block_on;
-
 use riker::actors::*;
 use slog::{o, Fuse, Logger};
 
@@ -42,20 +40,23 @@ mod common {
     }
 }
 
-#[test]
-fn system_create_with_slog() {
+#[tokio::test]
+async fn system_create_with_slog() {
     let log = Logger::root(
         Fuse(common::PrintlnDrain),
         o!("version" => "v1", "run_env" => "test"),
     );
-    let sys = SystemBuilder::new().log(log).create(ThreadPoolConfig::new(1, 0)).unwrap();
-    block_on(sys.shutdown()).unwrap();
+    let backend = tokio::runtime::Handle::current().into();
+    let sys = ActorSystem::new(backend).unwrap();
+    sys.shutdown().await;
+    let _ = log;
 }
 
 // a test that logging without slog using "log" crate works
-#[test]
-fn logging_stdlog() {
+#[tokio::test]
+async fn logging_stdlog() {
     log::info!("before the system");
-    let _sys = ActorSystem::new(ThreadPoolConfig::new(1, 0)).unwrap();
+    let backend = tokio::runtime::Handle::current().into();
+    let _sys = ActorSystem::new(backend).unwrap();
     log::info!("system exists");
 }
