@@ -169,7 +169,7 @@ impl ActorCell {
 
         if !self.has_children() {
             self.kernel().terminate();
-            slog::warn!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
+            slog::debug!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
             post_stop(actor);
         } else {
             self.inner.children.for_each(|child| self.stop(child));
