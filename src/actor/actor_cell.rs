@@ -172,13 +172,6 @@ impl ActorCell {
             slog::warn!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
             post_stop(actor);
         } else {
-            slog::warn!(
-                self.inner.system.log(),
-                "cannot run post stop: {}, uri: {}, still has children",
-                std::any::type_name::<A>(),
-                self.inner.uri,
-            );
-
             self.inner.children.for_each(|child| self.stop(child));
         }
     }
@@ -197,7 +190,6 @@ impl ActorCell {
             // No children exist. Stop this actor's kernel.
             if self.inner.is_terminating.load(Ordering::Relaxed) {
                 self.kernel().terminate();
-                slog::warn!(self.inner.system.log(), "run post stop: {}, uri: {}", std::any::type_name::<A>(), self.inner.uri);
                 post_stop(actor);
             }
 
@@ -239,45 +231,6 @@ impl<Msg: Message> From<ExtendedCell<Msg>> for ActorCell {
 impl fmt::Debug for ActorCell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ActorCell[{:?}]", self.uri())
-    }
-}
-
-impl TmpActorRefFactory for ActorCell {
-    fn tmp_actor_of_props<A: Actor>(
-        &self,
-        _props: BoxActorProd<A>,
-    ) -> Result<ActorRef<A::Msg>, CreateError> {
-        let _name = Uuid::new_v4().to_string();
-
-        // self.inner
-        //     .kernel
-        //     .create_actor(props, &name, &self.inner.system.temp_root())
-        unimplemented!()
-    }
-
-    fn tmp_actor_of<A: ActorFactory>(&self) -> Result<ActorRef<<A as Actor>::Msg>, CreateError> {
-        let _name = Uuid::new_v4().to_string();
-
-        // self.inner
-        //     .kernel
-        //     .create_actor(props, &name, &self.inner.system.temp_root())
-        unimplemented!()
-    }
-
-    fn tmp_actor_of_args<A, Args>(
-        &self,
-        _args: Args,
-    ) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
-    where
-        Args: ActorArgs,
-        A: ActorFactoryArgs<Args>,
-    {
-        let _name = Uuid::new_v4().to_string();
-
-        // self.inner
-        //     .kernel
-        //     .create_actor(props, &name, &self.inner.system.temp_root())
-        unimplemented!()
     }
 }
 

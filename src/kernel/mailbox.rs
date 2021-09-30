@@ -318,7 +318,6 @@ fn handle_evt<A>(
     }
 
     if let SystemEvent::ActorTerminated(terminated) = evt {
-        slog::warn!(ctx.system.log(), "sysev actor terminated: {}", terminated.actor.uri());
         cell.death_watch(&terminated.actor, actor);
     }
 }
